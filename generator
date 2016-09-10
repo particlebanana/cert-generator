@@ -1,0 +1,81 @@
+#! /bin/bash
+pkg="cert-generator"
+version="0.1"
+
+parent_file_path="/etc/kubernetes/ssl/"
+
+DOMAIN=$1
+
+set -o nounset
+set -o pipefail
+
+function ca-csr {
+  cat <<EOF
+{
+  "CN": "CA",
+  "key": { "algo": "rsa", "size": 2048 },
+  "names": [{ "C": "US", "L": "San Francisco", "O": "Kubernetes", "ST": "California" }]
+}
+EOF
+}
+
+function ca-config {
+  cat <<EOF
+{
+  "signing": {
+    "default": { "expiry": "43800h" },
+    "profiles": {
+      "server": {
+        "expiry": "43800h",
+        "usages": [ "signing", "key encipherment", "server auth" ]
+      },
+      "client": {
+        "expiry": "43800h",
+        "usages": [ "signing", "key encipherment", "client auth" ]
+      },
+      "client-server": {
+        "expiry": "43800h",
+        "usages": [ "signing", "key encipherment", "server auth", "client auth" ]
+      }
+    }
+  }
+}
+EOF
+}
+
+function csr {
+  cat <<EOF
+{"CN":"$1","hosts":[""],"key":{"algo":"rsa","size":2048}}
+EOF
+}
+
+function _chmod {
+  CN=$1
+  chmod 0644 $CN.pem ${CN}-key.pem
+}
+
+function generate {
+  CN=$1
+  PROFILE=$2
+  HOSTS=$3
+
+  echo "$(csr $CN)" \
+    | cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=$PROFILE \
+      -hostname="$HOSTS" - \
+    | cfssljson -bare $CN
+
+  _chmod $CN
+}
+
+mkdir -p $parent_file_path && cd $parent_file_path
+echo "$(ca-csr)" >ca-csr.json
+echo "$(ca-config)" >ca-config.json
+
+# generate ca
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
+_chmod ca
+
+# generate keys and certs
+generate assets client-server "$DOMAIN"
+
+exit 0

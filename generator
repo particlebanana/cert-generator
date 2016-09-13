@@ -30,9 +30,9 @@ function generate {
 cd $parent_file_path
 
 # Decrypt the CA files on disk
-aws kms decrypt --ciphertext-blob fileb://$parent_file_path/ca.encrypted.pem --output text --query Plaintext | base64 --decode > ca.pem
-aws kms decrypt --ciphertext-blob fileb://$parent_file_path/ca-key.encrypted.pem --output text --query Plaintext | base64 --decode > ca-key.pem
-aws kms decrypt --ciphertext-blob fileb://$parent_file_path/ca-config.encrypted.json --output text --query Plaintext | base64 --decode > ca-config.json
+aws kms decrypt --ciphertext-blob fileb://ca.encrypted.pem --output text --query Plaintext | base64 --decode > ca.pem
+aws kms decrypt --ciphertext-blob fileb://ca-key.encrypted.pem --output text --query Plaintext | base64 --decode > ca-key.pem
+aws kms decrypt --ciphertext-blob fileb://ca-config.encrypted.json --output text --query Plaintext | base64 --decode > ca-config.json
 _chmod ca
 
 # generate keys and certs

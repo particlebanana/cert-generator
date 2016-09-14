@@ -45,6 +45,6 @@ _chmod ca
 chmod 0644 ca-config.json
 
 # generate keys and certs
-generate assets client-server $DOMAIN
+generate assets client-server "localhost,kubernetes,kubernetes.default,127.0.0.1,*.*.compute.internal,*.ec2.internal,$DOMAIN"
 
 exit 0

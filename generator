@@ -45,6 +45,6 @@ _chmod ca
 chmod 0644 ca-config.json
 
 # generate keys and certs
-generate assets client-server "$DOMAIN"
+generate assets client-server $DOMAIN
 
 exit 0

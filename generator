@@ -11,7 +11,7 @@ set -o pipefail
 
 function csr {
   cat <<EOF
-{"CN":"$1","hosts":[""],"key":{"algo":"rsa","size":2048}}
+{"CN":"$1","hosts":["localhost","kubernetes","kubernetes.default","127.0.0.1","*.*.compute.internal","*.ec2.internal","${DOMAIN}"],"key":{"algo":"rsa","size":2048}}
 EOF
 }
 
@@ -22,12 +22,9 @@ function _chmod {
 
 function generate {
   CN=$1
-  PROFILE=$2
-  HOSTS=$3
-
+  echo "$(csr $CN)"
   echo "$(csr $CN)" \
-    | cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=$PROFILE \
-      -hostname="$HOSTS" - \
+    | cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client-server - \
     | cfssljson -bare $CN
 
   _chmod $CN
@@ -45,6 +42,6 @@ _chmod ca
 chmod 0644 ca-config.json
 
 # generate keys and certs
-generate assets client-server "localhost,kubernetes,kubernetes.default,127.0.0.1,*.*.compute.internal,*.ec2.internal,$DOMAIN"
+generate assets
 
 exit 0

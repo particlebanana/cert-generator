@@ -9,7 +9,7 @@ set -o pipefail
 
 function csr {
   cat <<EOF
-{"CN":"${DOMAIN}","hosts":[],"key":{"algo":"rsa","size":2048}}
+{"CN":"${DOMAIN}","hosts":["localhost","kubernetes","kubernetes.default","127.0.0.1","${DOMAIN}"],"key":{"algo":"rsa","size":2048}}
 EOF
 }
 
@@ -20,10 +20,10 @@ function _chmod {
 
 function generate {
   CN=$1
-  echo "$(csr $CN)"
-  echo "$(csr $CN)" \
-    | cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client-server - \
-    | cfssljson -bare $CN
+  echo "$(csr)"
+  echo "$(csr)">asset-csr.json
+  cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client-server asset-csr.json \
+  | cfssljson -bare $CN
 
   _chmod $CN
 }
